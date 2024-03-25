@@ -11,16 +11,20 @@ The content length should be the number of bytes of the body
 the signature is the hmc-sha3-512 hash of the body using the account private key  
 the body will a msgpack encoded object  
 
-//TODO define response format
+//TODO The response is a lie.
 
 After the initial connection, the client must send a CNN command in the first 5s  
 or the server will disconnect the client, the client must send a KALIVE command every x amount of minutes
 to keep the connection open, this amount of time may change.
 
-## List of commands
+## List of server commands
 
 ### CNN
 
 First commands sent after the initial connection with the server  
 It should contain the account identifier, a unix timestamp and a 8bytes nonce.  
-It an ok message if the validation pass or disconect the client if it fails.
+It will disconnect the client, if the validation fails.
+
+### KALIVE
+
+Empty message, should be sent every x amount of time, to keep the connection open
