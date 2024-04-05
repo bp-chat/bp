@@ -1,4 +1,16 @@
-DISCLAIMER: I have little to no knowledge of encryption, so everything that's written below around this theme is mainly my imagination on how those things work.
+**DISCLAIMER**: I have little to no knowledge of encryption, so everything that's written below around this theme is mainly my imagination on how those things work. I did
+some light reading on the subject and what is outlined below seems to be a (very) rough approximation of how E2E encryption actually works.
+
+The main problem with the way the communication happens as outlined in the following is that the server forwards the public keys to the users who wish to chat. That is, the
+server has access to the key. Of course, we are well intentioned and the server code will be open source and self-hostable, however, requiring zero trust from the server is
+definitely an worthwhile goal. An alternative to requiring trust in the server is to have the users connect via P2P to exchange public keys. To be quite honest, I have no idea
+how feasible this would be. First, both users would have to be online at the same time for that. This is certainly an UX issue, but the client could explain the motivation behind
+this to the user and could also provide a (possibly less secure) alternative: to rely on a PKI (Public key infrastructure) provider (?) for key exchange.
+
+https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely
+https://www.keyfactor.com/education-center/what-is-pki/
+
+TODO: finish the disclaimer (finish talking about P2P, PKI, explain what is meant by $PUBLIC_KEY below, format references)
 
 # Assuming stateless server (no authn)
 
