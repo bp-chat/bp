@@ -1,16 +1,40 @@
-**DISCLAIMER**: I have little to no knowledge of encryption, so everything that's written below around this theme is mainly my imagination on how those things work. I did
+# bp protocol v0
+
+## DISCLAIMER
+
+I have little to no knowledge of encryption, so everything that's written below around this theme is mainly my imagination on how those things work. I did
 some light reading on the subject and what is outlined below seems to be a (very) rough approximation of how E2E encryption actually works.
 
-The main problem with the way the communication happens as outlined in the following is that the server forwards the public keys to the users who wish to chat. That is, the
-server has access to the key. Of course, we are well intentioned and the server code will be open source and self-hostable, however, requiring zero trust from the server is
-definitely an worthwhile goal. An alternative to requiring trust in the server is to have the users connect via P2P to exchange public keys. To be quite honest, I have no idea
-how feasible this would be. First, both users would have to be online at the same time for that. This is certainly an UX issue, but the client could explain the motivation behind
-this to the user and could also provide a (possibly less secure) alternative: to rely on a PKI (Public key infrastructure) provider (?) for key exchange.
+## Glossary
 
-https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely
-https://www.keyfactor.com/education-center/what-is-pki/
+CA: Certificate authority. [ssl.com - What is a Certificate Authority (CA)?](https://www.ssl.com/article/what-is-a-certificate-authority-ca/)
+MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attack](https://www.imperva.com/learn/application-security/man-in-the-middle-attack-mitm/)
 
-TODO: finish the disclaimer (finish talking about P2P, PKI, explain what is meant by $PUBLIC_KEY below, format references)
+## E2E encryption
+
+`bp` will use E2E encryption. Here's a reference for that [Security Stack Exchange - What is end-to-end encryption and how to do it (correctly / securely)?](https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely)
+
+For E2E encryption to work, the peers communicating on the network have to exchange their public keys. One risk that's introduced with the server managing public key exchange
+is the possibilty of a MITM attack. For more information, see the PKI section below.
+
+## P2P key exchange
+
+One (maybe) possible way for the clients to exchange keys is for them to estabilish a P2P connection. It's probably even possible to do this over TLS: [Security Stack Exchange - Can TLS be used in P2P Encryption?](https://security.stackexchange.com/questions/165949/can-tls-be-used-in-p2p-encryption). However, this does not seem to added security benefit over the
+server handling key exchange. For example, in order for Alice and Bob to P2P connect to exchange keys, the server would have to provide Alice with Bob's IP and vice-versa. If
+there's a MITM, they could, for example, send their own IP to Alice as if it were Bob's and vice-versa, and then could (1) get Alice's and Bob's public keys and, most importantly,
+(2) send _their own_ public key to both as if it were Alice's and Bob's. In that way, the MITM could decrypt the messages Alice encrypts for Bob using the MITM key
+thinking the key belongs to Bob and vice-versa.
+
+On top of that, the P2P key exchange represents an UX issue: both clients who wish to connect have to be online at the same time.
+
+See the section on PKI below for an attempt to make a MITM attack more difficult.
+
+## PKI
+
+Although at least in part a sales pitch, this article gives a good overview on the motivation behind PKI: [Keyfactor - What is PKI? A Public Key Infrastructure Definitive Guide](https://www.keyfactor.com/education-center/what-is-pki/). The main purpose of using PKI (digital certificates and CAs) is to try to make sure that when Alice sends Bob her public key,
+Bob can have more confidence that it's actually Alice's public key and not a MITM's.
+
+TODO: fix what follows below given the new information about MITM attacks.
 
 # Assuming stateless server (no authn)
 
