@@ -8,6 +8,7 @@ some light reading on the subject and what is outlined below seems to be a (very
 ## Glossary
 
 CA: Certificate authority. [ssl.com - What is a Certificate Authority (CA)?](https://www.ssl.com/article/what-is-a-certificate-authority-ca/)
+
 MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attack](https://www.imperva.com/learn/application-security/man-in-the-middle-attack-mitm/)
 
 ## E2E encryption
@@ -15,15 +16,15 @@ MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attac
 `bp` will use E2E encryption. Here's a reference for that [Security Stack Exchange - What is end-to-end encryption and how to do it (correctly / securely)?](https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely)
 
 For E2E encryption to work, the peers communicating on the network have to exchange their public keys. One risk that's introduced with the server managing public key exchange
-is the possibilty of a MITM attack. For more information, see the PKI section below.
+is the possibilty of a MITM attack, depending on how it's implemented. For more information, see the PKI section below.
 
 ## P2P key exchange
 
-One (maybe) possible way for the clients to exchange keys is for them to estabilish a P2P connection. It's probably even possible to do this over TLS: [Security Stack Exchange - Can TLS be used in P2P Encryption?](https://security.stackexchange.com/questions/165949/can-tls-be-used-in-p2p-encryption). However, this does not seem to added security benefit over the
-server handling key exchange. For example, in order for Alice and Bob to P2P connect to exchange keys, the server would have to provide Alice with Bob's IP and vice-versa. If
-there's a MITM, they could, for example, send their own IP to Alice as if it were Bob's and vice-versa, and then could (1) get Alice's and Bob's public keys and, most importantly,
-(2) send _their own_ public key to both as if it were Alice's and Bob's. In that way, the MITM could decrypt the messages Alice encrypts for Bob using the MITM key
-thinking the key belongs to Bob and vice-versa.
+One (maybe) possible way for the clients to exchange keys is for them to estabilish a P2P connection. It's probably even possible to do this over TLS: [Security Stack Exchange - Can TLS be used in P2P Encryption?](https://security.stackexchange.com/questions/165949/can-tls-be-used-in-p2p-encryption). However, this does not seem to bring any added security benefit
+over the server handling key exchange naively. For example, in order for Alice and Bob to P2P connect to exchange keys, the server would have to provide Alice with Bob's IP and
+vice-versa. If there's a MITM, they could, for example, send their own IP to Alice as if it were Bob's and vice-versa, and then could (1) get Alice's and Bob's public keys and,
+most importantly, (2) send _their own_ public key to both as if it were Alice's and Bob's. In that way, the MITM could decrypt the messages Alice encrypts for Bob using the MITM
+key thinking the key belongs to Bob and vice-versa.
 
 On top of that, the P2P key exchange represents an UX issue: both clients who wish to connect have to be online at the same time.
 
@@ -32,7 +33,11 @@ See the section on PKI below for an attempt to make a MITM attack more difficult
 ## PKI
 
 Although at least in part a sales pitch, this article gives a good overview on the motivation behind PKI: [Keyfactor - What is PKI? A Public Key Infrastructure Definitive Guide](https://www.keyfactor.com/education-center/what-is-pki/). The main purpose of using PKI (digital certificates and CAs) is to try to make sure that when Alice sends Bob her public key,
-Bob can have more confidence that it's actually Alice's public key and not a MITM's.
+Bob can have more confidence that it's actually Alice's public key and not a MITM's. To provide more confidence to `bp`'s users we can (1) have a digital certificate, (2)
+whenever a client is trying to connect, show ours and the CA's info so the user can have more confidence that, provided their client was not tampered with, he's actually connecting
+to a genuine `bp` server. We can discuss the UX of always showing this information upon connection, and how we can make this better. In this day and age saying that we have to
+have a digital certificate for secure connection is absolutely not groundbreaking. However, hopefully what was written up until now provides justification for why that is necessary.
+At least for this writer, a lot of what's written above was previously not clear.
 
 TODO: fix what follows below given the new information about MITM attacks.
 
