@@ -35,21 +35,36 @@ See the section on PKI below for an attempt to make a MITM attack more difficult
 Although at least in part a sales pitch, this article gives a good overview on the motivation behind PKI: [Keyfactor - What is PKI? A Public Key Infrastructure Definitive Guide](https://www.keyfactor.com/education-center/what-is-pki/). The main purpose of using PKI (digital certificates and CAs) is to try to make sure that when Alice sends Bob her public key,
 Bob can have more confidence that it's actually Alice's public key and not a MITM's. To provide more confidence to `bp`'s users we can (1) have a digital certificate, (2)
 whenever a client is trying to connect, show ours and the CA's info so the user can have more confidence that, provided their client was not tampered with, he's actually connecting
-to a genuine `bp` server. We can discuss the UX of always showing this information upon connection, and how we can make this better. In this day and age saying that we have to
-have a digital certificate for secure connection is absolutely not groundbreaking. However, hopefully what was written up until now provides justification for why that is necessary.
-At least for this writer, a lot of what's written above was previously not clear.
+to a genuine `bp` server. We can discuss the UX of always showing this information upon connection, and how we can make this better. Maybe the client can hardcode its expectations
+regarding the server's certificate subject and CA, and fail to connect if the expectation is broken.
 
-TODO: fix what follows below given the new information about MITM attacks.
-
-# Assuming stateless server (no authn)
+In this day and age saying that we have to have a digital certificate for secure connection is absolutely not groundbreaking. However, hopefully what was written up until
+now provides justification for why that is necessary. At least for this writer, a lot of what's written above was previously not clear.
 
 ## Variables
 
-$SERVER_CONNECT_TIMEOUT: The time in milliseconds the client waits for the server's public key upon connection.
-$CLIENT_CONNECT_TIMEOUT: The time in milliseconds the server waits for the client's hashed username.
-$CLIENT_CONNECT_TIMEOUT_LIMIT: The integer number that determines how many times the client can timeout upon connection before being banned.
+`$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
+`$CLIENT_CONNECT_TIMEOUT`: The time in milliseconds the server waits for the client's hashed username.
+`$CLIENT_CONNECT_TIMEOUT_LIMIT`: The integer number that determines how many times the client can timeout upon connection before being banned.
 
-## Client - connect
+## Commands
+
+### Client - connect
+
+**DISCLAIMER**: The following is an assumption of how the communication will work with digital certificates.
+
+1. The client attempts connection with the server using TLS;
+    1. [OPTION] Upon handshake, the client shows the server's certificate information to the user, especially information about the server _and_ the CA;
+        1. [ALTERNATIVE] The client can have hardcoded expectations about the server's certificate information, and when those expectations fail, the client refuses to connect.
+        If the client has been tampered with this won't work, but if that's the case all bets are off, anyway;
+    2. One way or another, the user or the client itself may refuse to connect;
+2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate;
+3. Upon client connection:
+    1. [WHEN] User not registered:
+        1. Client asks the user for a username and a password [WIP]
+    2. [WHEN] User registered.
+
+**DEPRECATED**
 
 1. The client connects to the server using TLS;
 2. The server sends its public key [1] in the following format: `connect:$PUBLIC_KEY`;
@@ -59,12 +74,14 @@ $CLIENT_CONNECT_TIMEOUT_LIMIT: The integer number that determines how many times
     prevent a [Slowloris attack](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/);
     2. Each time the client times out, the server gives the client's IP a strike. After `$CLIENT_CONNECT_TIMEOUT_LIMIT` many strikes, the client is banned;
 
-## Client - banishment
+### Client - banishment
 
-## Server - broadcast users
+### Server - broadcast users
 
-## Client - send
+### Client - send
 
-## Server - send
+### Server - send
+
+## Notes
 
 [1] This is done so one end (A) can encrypt the message with the the other end's (B) public key, so only B can decrypt it with its private key. Is that how it works?
