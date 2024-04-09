@@ -17,14 +17,29 @@ After the initial connection, the client must send a CNN command in the first 5s
 or the server will disconnect the client, the client must send a KALIVE command every x amount of minutes
 to keep the connection open, this amount of time may change.
 
-## List of server commands
+## List of client to server commands
 
 ### CNN
 
 First commands sent after the initial connection with the server  
 It should contain the account identifier, a unix timestamp and a 8bytes nonce.  
-It will disconnect the client, if the validation fails.
+It will disconnect the client, if the validation fails.  
+payload: (id:acc_id, timestamp:1702622553, nouce:15074760468938913545)
 
 ### KALIVE
 
 Empty message, should be sent every x amount of time, to keep the connection open
+
+### LST_USR
+
+Request a message from the server with the current connected user list.
+
+### CNN_USR
+
+Request a handshake message to be sent to a user.  
+Later it could be used to initiate a e2ee process  
+payload: (to:user_id)
+
+### MSG
+
+//TODO
