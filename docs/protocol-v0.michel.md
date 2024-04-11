@@ -43,20 +43,37 @@ now provides justification for why that is necessary. At least for this writer, 
 
 ## Variables
 
+`$SERVER_TIMEOUT`: The time in milliseconds the client waits for the server to respond to a command with a "synchronous" character before falling back to an error state.
 `$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
 `$CLIENT_CONNECT_TIMEOUT`: The time in milliseconds the server waits for the client's hashed username.
 `$CLIENT_CONNECT_TIMEOUT_LIMIT`: The integer number that determines how many times the client can timeout upon connection before being banned.
 
 ## Commands
 
-### Client - connect
-
 **DISCLAIMER**: The following is an assumption of how the communication will work with digital certificates.
+
+- [ASSUMPTION] The client will start up offline, will only attempt to connect when the user either tries to sign up or log in.
+
+### Client - sign up
+
+If the user does not yet have an account, he can sign up through the client.
+
+1. User chooses the option to sign up;
+2. Client connects to the server. See the command `connect` below for details;
+3. Client asks for username;
+4. Client sends command `signup-exists:$USERNAME` to the server;
+    1. If the server takes longer than `$SERVER_TIMEOUT` to respond, the client warns the user. More work can be done around this [UX];
+5. Server sends message to the client to inform of the username existence, either `signup-exists:false` if no user is already using this username, or `signup-exists:true` otherwise;
+    1. If the username is already in use, the client lets the user know so they can pick another one;
+6. Client asks the user for a passphrase;
+7. Client encrypts the chosen username with the passphrase and the client's private key [ASSUMPTION] and sends command `signup:$USERNAME:$ENCRYPTED_USERNAME`;
+
+### Client - connect
 
 1. The client attempts connection with the server using TLS;
     1. [OPTION] Upon handshake, the client shows the server's certificate information to the user, especially information about the server _and_ the CA;
         1. [ALTERNATIVE] The client can have hardcoded expectations about the server's certificate information, and when those expectations fail, the client refuses to connect.
-        If the client has been tampered with this won't work, but if that's the case all bets are off, anyway;
+        If the client has been tampered with this won't work, but if that's the case all bets are off anyway;
     2. One way or another, the user or the client itself may refuse to connect;
 2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate;
 3. Upon client connection:
