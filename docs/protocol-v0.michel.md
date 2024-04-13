@@ -44,8 +44,11 @@ now provides justification for why that is necessary. At least for this writer, 
 ## Variables
 
 `$SERVER_TIMEOUT`: The time in milliseconds the client waits for the server to respond to a command with a "synchronous" character before falling back to an error state.
+
 `$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
+
 `$CLIENT_CONNECT_TIMEOUT`: The time in milliseconds the server waits for the client's hashed username.
+
 `$CLIENT_CONNECT_TIMEOUT_LIMIT`: The integer number that determines how many times the client can timeout upon connection before being banned.
 
 ## Commands
@@ -55,6 +58,8 @@ now provides justification for why that is necessary. At least for this writer, 
 - [ASSUMPTION] The client will start up offline, will only attempt to connect when the user either tries to sign up or log in.
 
 ### Client - sign up
+
+TODO: spec Slowloris prevention
 
 If the user does not yet have an account, he can sign up through the client.
 
@@ -67,6 +72,28 @@ If the user does not yet have an account, he can sign up through the client.
     1. If the username is already in use, the client lets the user know so they can pick another one;
 6. Client asks the user for a passphrase;
 7. Client encrypts the chosen username with the passphrase and the client's private key [ASSUMPTION] and sends command `signup:$USERNAME:$ENCRYPTED_USERNAME`;
+    1. Client observes and acts on `$SERVER_TIMEOUT`;
+    2. If at this moment the username was already chosen by another user, the server sends the message `signup-exists:true` and the client lets the user know;
+    3. [OPTION] This document from here on out is going to assume the strategy outlined above of never sending the user's password to the server. This is inspired by
+    [Protected Text](https://www.protectedtext.com/). At first it seems a more secure strategy. However, I wouldn't rule out, for example, the possibility of sending the
+    private-key-encrypted passphrase to the server [SECURITY].
+8. Server sends message `signup:ok` to let the client know the process succeeded. It stores the $USERNAME and $ENCRYPTED_USERNAME so the user can sign in;
+9. After signup [UX]:
+    1. [OPTION] The user does not get automatically logged in, and has to log in separately;
+    2. [OPTION] The user gets automatically logged in;
+
+### Client - login
+
+TODO: spec Slowloris prevention
+
+1. User chooses the option to login;
+2. Client connects to the server. See the command `connect` below for details;
+3. User provides username and passphrase;
+4. Client encrypts provided username with user's passphrase and private key [ASSUMPTION] and sends the command `login:$USERNAME:$ENCRYPTED_USERNAME` to the server;
+    1. Client observes and acts on `$SERVER_TIMEOUT`;
+    2. If credentials don't match, server sends message `login:invalid` to the client, and it lets the user know;
+5. Server sends the message `login:ok` to let the client know the login succeeded;
+6. If there are any users who opted to be broadcasted, the server broadcasts those users to the client. See details on the `broadcast users` spec.
 
 ### Client - connect
 
