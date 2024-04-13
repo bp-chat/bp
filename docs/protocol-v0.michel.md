@@ -59,7 +59,9 @@ now provides justification for why that is necessary. At least for this writer, 
 
 ### Client - sign up
 
-TODO: spec Slowloris prevention
+- TODO:
+    - spec Slowloris prevention;
+    - spec broadcast opt-in
 
 If the user does not yet have an account, he can sign up through the client.
 
@@ -76,7 +78,8 @@ If the user does not yet have an account, he can sign up through the client.
     2. If at this moment the username was already chosen by another user, the server sends the message `signup-exists:true` and the client lets the user know;
     3. [OPTION] This document from here on out is going to assume the strategy outlined above of never sending the user's password to the server. This is inspired by
     [Protected Text](https://www.protectedtext.com/). At first it seems a more secure strategy. However, I wouldn't rule out, for example, the possibility of sending the
-    private-key-encrypted passphrase to the server [SECURITY].
+    private-key-encrypted passphrase to the server. In this latter case, the server (1) wouldn't have knowledge of the passphrase, (2) wouldn't necessarily (?) have
+    to store the encrypted passphrase [SECURITY].
 8. Server sends message `signup:ok` to let the client know the process succeeded. It stores the $USERNAME and $ENCRYPTED_USERNAME so the user can sign in;
 9. After signup [UX]:
     1. [OPTION] The user does not get automatically logged in, and has to log in separately;
@@ -93,7 +96,6 @@ TODO: spec Slowloris prevention
     1. Client observes and acts on `$SERVER_TIMEOUT`;
     2. If credentials don't match, server sends message `login:invalid` to the client, and it lets the user know;
 5. Server sends the message `login:ok` to let the client know the login succeeded;
-6. If there are any users who opted to be broadcasted, the server broadcasts those users to the client. See details on the `broadcast users` spec.
 
 ### Client - connect
 
@@ -118,13 +120,70 @@ TODO: spec Slowloris prevention
     prevent a [Slowloris attack](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/);
     2. Each time the client times out, the server gives the client's IP a strike. After `$CLIENT_CONNECT_TIMEOUT_LIMIT` many strikes, the client is banned;
 
-### Client - banishment
 
 ### Server - broadcast users
+
+- [IDEAS]
+    - On signup user has to opt-in to be broadcasted, default is not to broadcast;
+
+### Client - cancel broadcast
+
+User can opt-out of being broadcasted at any time. The effect will not necessarily be immediate, though. [TODO]
+
+### Client - page broadcasted users
+
+The broadcast user list is paginated. [TODO]
+
+### Client - search broadcasted user
+
+Client can search for a user among the broadcasted ones. [TODO]
+
+### Client - request authorization
+
+- [IDEAS]
+    - Client can request authorization to send message to a particular user;
+        - The authorizer can be from the broadcasted users list;
+        - The authorizer can be specified by text. In this case, when the client emits this request the server only acknowledges it. Upon acknowledging it, the server may
+        have either (1) ignored the request because the user didn't exist or the requester _is_ the authorizer, (2) stored the request to be sent later because the authorizer
+        is not online, or (3) sent the request to the authorizer. This is done so a bad actor cannot easily figure out what usernames exist. Not that this would
+        necessarily matter much because (1) the authorizer have to accept the request, (2) even if the bad actor could guess the user's passphrase, because the encryption is signed
+        with the user's private key [ASSUMPTION] the bad actor wouldn't be able to access the user's account;
+        - There should be consequences for an user who's spamming requests, especially if it's to the same user;
+
+### Server - send authorization request
+
+- [IDEAS]
+    - To receive messages, users have to authorize the sender.
+
+### Client - deny authorization
+
+Once a request has been denied it is stored. The authorizer has access to the denied requests and can (1) authorize the user, (2) do not authorize, but "clear" the denial. [TODO]
+
+### Client - clear authorization denial
+
+### Client - authorize
 
 ### Client - send
 
 ### Server - send
+
+### Client - banishment
+
+## Alternative client ideas
+
+With well defined specification and protocol there can be a wealth of clients aside from the official reference client that's going to be implemented. Here are some interesting (to
+me) ideas in no particular order.
+
+### Browser based
+
+Those would take advantage of the ubiquity of web browsers:
+
+- Lightweight JS browser client that uses the bare minimum HTTP, almost as if it were pure TCP. For example, all requests could be `POST`s with a single header that specify the
+client kind and the payload could be in the standard protocol specified above. The server could identify it's that kind of client and parse the commands slightly differently;
+- Lightweight JS-less browser client. Because it's JS-less it would have to use the standard way browsers communicate with servers, and because of this communication with the
+server would have to be significantly different. The server could have a dual mode of operation, but maybe what would make more sense in this case would be to have an intermediary
+proxy server (written in Rust?!) that talks standard HTTP, translates it to the `bp` protocol and passes it on to the main server, and vice-versa;
+- Lightweight WASM client. This can be somewhat similar to the JS client. I don't know WASM but maybe it would even possible to use pure TCP and act exactly as a native client would.
 
 ## Notes
 
