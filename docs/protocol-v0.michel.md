@@ -8,6 +8,7 @@ some light reading on the subject and what is outlined below seems to be a (very
 ## Glossary
 
 CA: Certificate authority. [ssl.com - What is a Certificate Authority (CA)?](https://www.ssl.com/article/what-is-a-certificate-authority-ca/)
+
 MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attack](https://www.imperva.com/learn/application-security/man-in-the-middle-attack-mitm/)
 
 ## E2E encryption
@@ -15,15 +16,15 @@ MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attac
 `bp` will use E2E encryption. Here's a reference for that [Security Stack Exchange - What is end-to-end encryption and how to do it (correctly / securely)?](https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely)
 
 For E2E encryption to work, the peers communicating on the network have to exchange their public keys. One risk that's introduced with the server managing public key exchange
-is the possibilty of a MITM attack. For more information, see the PKI section below.
+is the possibilty of a MITM attack, depending on how it's implemented. For more information, see the PKI section below.
 
 ## P2P key exchange
 
-One (maybe) possible way for the clients to exchange keys is for them to estabilish a P2P connection. It's probably even possible to do this over TLS: [Security Stack Exchange - Can TLS be used in P2P Encryption?](https://security.stackexchange.com/questions/165949/can-tls-be-used-in-p2p-encryption). However, this does not seem to added security benefit over the
-server handling key exchange. For example, in order for Alice and Bob to P2P connect to exchange keys, the server would have to provide Alice with Bob's IP and vice-versa. If
-there's a MITM, they could, for example, send their own IP to Alice as if it were Bob's and vice-versa, and then could (1) get Alice's and Bob's public keys and, most importantly,
-(2) send _their own_ public key to both as if it were Alice's and Bob's. In that way, the MITM could decrypt the messages Alice encrypts for Bob using the MITM key
-thinking the key belongs to Bob and vice-versa.
+One (maybe) possible way for the clients to exchange keys is for them to estabilish a P2P connection. It's probably even possible to do this over TLS: [Security Stack Exchange - Can TLS be used in P2P Encryption?](https://security.stackexchange.com/questions/165949/can-tls-be-used-in-p2p-encryption). However, this does not seem to bring any added security benefit
+over the server handling key exchange naively. For example, in order for Alice and Bob to P2P connect to exchange keys, the server would have to provide Alice with Bob's IP and
+vice-versa. If there's a MITM, they could, for example, send their own IP to Alice as if it were Bob's and vice-versa, and then could (1) get Alice's and Bob's public keys and,
+most importantly, (2) send _their own_ public key to both as if it were Alice's and Bob's. In that way, the MITM could decrypt the messages Alice encrypts for Bob using the MITM
+key thinking the key belongs to Bob and vice-versa.
 
 On top of that, the P2P key exchange represents an UX issue: both clients who wish to connect have to be online at the same time.
 
@@ -32,19 +33,84 @@ See the section on PKI below for an attempt to make a MITM attack more difficult
 ## PKI
 
 Although at least in part a sales pitch, this article gives a good overview on the motivation behind PKI: [Keyfactor - What is PKI? A Public Key Infrastructure Definitive Guide](https://www.keyfactor.com/education-center/what-is-pki/). The main purpose of using PKI (digital certificates and CAs) is to try to make sure that when Alice sends Bob her public key,
-Bob can have more confidence that it's actually Alice's public key and not a MITM's.
+Bob can have more confidence that it's actually Alice's public key and not a MITM's. To provide more confidence to `bp`'s users we can (1) have a digital certificate, (2)
+whenever a client is trying to connect, show ours and the CA's info so the user can have more confidence that, provided their client was not tampered with, he's actually connecting
+to a genuine `bp` server. We can discuss the UX of always showing this information upon connection, and how we can make this better. Maybe the client can hardcode its expectations
+regarding the server's certificate subject and CA, and fail to connect if the expectation is broken.
 
-TODO: fix what follows below given the new information about MITM attacks.
-
-# Assuming stateless server (no authn)
+In this day and age saying that we have to have a digital certificate for secure connection is absolutely not groundbreaking. However, hopefully what was written up until
+now provides justification for why that is necessary. At least for this writer, a lot of what's written above was previously not clear.
 
 ## Variables
 
-$SERVER_CONNECT_TIMEOUT: The time in milliseconds the client waits for the server's public key upon connection.
-$CLIENT_CONNECT_TIMEOUT: The time in milliseconds the server waits for the client's hashed username.
-$CLIENT_CONNECT_TIMEOUT_LIMIT: The integer number that determines how many times the client can timeout upon connection before being banned.
+`$SERVER_TIMEOUT`: The time in milliseconds the client waits for the server to respond to a command with a "synchronous" character before falling back to an error state.
 
-## Client - connect
+`$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
+
+`$CLIENT_CONNECT_TIMEOUT`: The time in milliseconds the server waits for the client's hashed username.
+
+`$CLIENT_CONNECT_TIMEOUT_LIMIT`: The integer number that determines how many times the client can timeout upon connection before being banned.
+
+## Commands
+
+**DISCLAIMER**: The following is an assumption of how the communication will work with digital certificates.
+
+- [ASSUMPTION] The client will start up offline, will only attempt to connect when the user either tries to sign up or log in.
+
+### Client - sign up
+
+- TODO:
+    - spec Slowloris prevention;
+    - spec broadcast opt-in
+
+If the user does not yet have an account, he can sign up through the client.
+
+1. User chooses the option to sign up;
+2. Client connects to the server. See the command `connect` below for details;
+3. Client asks for username;
+4. Client sends command `signup-exists:$USERNAME` to the server;
+    1. If the server takes longer than `$SERVER_TIMEOUT` to respond, the client warns the user. More work can be done around this [UX];
+5. Server sends message to the client to inform of the username existence, either `signup-exists:false` if no user is already using this username, or `signup-exists:true` otherwise;
+    1. If the username is already in use, the client lets the user know so they can pick another one;
+6. Client asks the user for a passphrase;
+7. Client encrypts the chosen username with the passphrase and the client's private key [ASSUMPTION] and sends command `signup:$USERNAME:$ENCRYPTED_USERNAME`;
+    1. Client observes and acts on `$SERVER_TIMEOUT`;
+    2. If at this moment the username was already chosen by another user, the server sends the message `signup-exists:true` and the client lets the user know;
+    3. [OPTION] This document from here on out is going to assume the strategy outlined above of never sending the user's password to the server. This is inspired by
+    [Protected Text](https://www.protectedtext.com/). At first it seems a more secure strategy. However, I wouldn't rule out, for example, the possibility of sending the
+    private-key-encrypted passphrase to the server. In this latter case, the server (1) wouldn't have knowledge of the passphrase, (2) wouldn't necessarily (?) have
+    to store the encrypted passphrase [SECURITY].
+8. Server sends message `signup:ok` to let the client know the process succeeded. It stores the $USERNAME and $ENCRYPTED_USERNAME so the user can sign in;
+9. After signup [UX]:
+    1. [OPTION] The user does not get automatically logged in, and has to log in separately;
+    2. [OPTION] The user gets automatically logged in;
+
+### Client - login
+
+TODO: spec Slowloris prevention
+
+1. User chooses the option to login;
+2. Client connects to the server. See the command `connect` below for details;
+3. User provides username and passphrase;
+4. Client encrypts provided username with user's passphrase and private key [ASSUMPTION] and sends the command `login:$USERNAME:$ENCRYPTED_USERNAME` to the server;
+    1. Client observes and acts on `$SERVER_TIMEOUT`;
+    2. If credentials don't match, server sends message `login:invalid` to the client, and it lets the user know;
+5. Server sends the message `login:ok` to let the client know the login succeeded;
+
+### Client - connect
+
+1. The client attempts connection with the server using TLS;
+    1. [OPTION] Upon handshake, the client shows the server's certificate information to the user, especially information about the server _and_ the CA;
+        1. [ALTERNATIVE] The client can have hardcoded expectations about the server's certificate information, and when those expectations fail, the client refuses to connect.
+        If the client has been tampered with this won't work, but if that's the case all bets are off anyway;
+    2. One way or another, the user or the client itself may refuse to connect;
+2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate;
+3. Upon client connection:
+    1. [WHEN] User not registered:
+        1. Client asks the user for a username and a password [WIP]
+    2. [WHEN] User registered.
+
+**DEPRECATED**
 
 1. The client connects to the server using TLS;
 2. The server sends its public key [1] in the following format: `connect:$PUBLIC_KEY`;
@@ -54,12 +120,71 @@ $CLIENT_CONNECT_TIMEOUT_LIMIT: The integer number that determines how many times
     prevent a [Slowloris attack](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/);
     2. Each time the client times out, the server gives the client's IP a strike. After `$CLIENT_CONNECT_TIMEOUT_LIMIT` many strikes, the client is banned;
 
-## Client - banishment
 
-## Server - broadcast users
+### Server - broadcast users
 
-## Client - send
+- [IDEAS]
+    - On signup user has to opt-in to be broadcasted, default is not to broadcast;
 
-## Server - send
+### Client - cancel broadcast
+
+User can opt-out of being broadcasted at any time. The effect will not necessarily be immediate, though. [TODO]
+
+### Client - page broadcasted users
+
+The broadcast user list is paginated. [TODO]
+
+### Client - search broadcasted user
+
+Client can search for a user among the broadcasted ones. [TODO]
+
+### Client - request authorization
+
+- [IDEAS]
+    - Client can request authorization to send message to a particular user;
+        - The authorizer can be from the broadcasted users list;
+        - The authorizer can be specified by text. In this case, when the client emits this request the server only acknowledges it. Upon acknowledging it, the server may
+        have either (1) ignored the request because the user didn't exist or the requester _is_ the authorizer, (2) stored the request to be sent later because the authorizer
+        is not online, or (3) sent the request to the authorizer. This is done so a bad actor cannot easily figure out what usernames exist. Not that this would
+        necessarily matter much because (1) the authorizer have to accept the request, (2) even if the bad actor could guess the user's passphrase, because the encryption is signed
+        with the user's private key [ASSUMPTION] the bad actor wouldn't be able to access the user's account;
+        - There should be consequences for an user who's spamming requests, especially if it's to the same user;
+
+### Server - send authorization request
+
+- [IDEAS]
+    - To receive messages, users have to authorize the sender.
+
+### Client - deny authorization
+
+Once a request has been denied it is stored. The authorizer has access to the denied requests and can (1) authorize the user, (2) do not authorize, but "clear" the denial. [TODO]
+
+### Client - clear authorization denial
+
+### Client - authorize
+
+### Client - send
+
+### Server - send
+
+### Client - banishment
+
+## Alternative client ideas
+
+With well defined specification and protocol there can be a wealth of clients aside from the official reference client that's going to be implemented. Here are some interesting (to
+me) ideas in no particular order.
+
+### Browser based
+
+Those would take advantage of the ubiquity of web browsers:
+
+- Lightweight JS browser client that uses the bare minimum HTTP, almost as if it were pure TCP. For example, all requests could be `POST`s with a single header that specify the
+client kind and the payload could be in the standard protocol specified above. The server could identify it's that kind of client and parse the commands slightly differently;
+- Lightweight JS-less browser client. Because it's JS-less it would have to use the standard way browsers communicate with servers, and because of this communication with the
+server would have to be significantly different. The server could have a dual mode of operation, but maybe what would make more sense in this case would be to have an intermediary
+proxy server (written in Rust?!) that talks standard HTTP, translates it to the `bp` protocol and passes it on to the main server, and vice-versa;
+- Lightweight WASM client. This can be somewhat similar to the JS client. I don't know WASM but maybe it would even possible to use pure TCP and act exactly as a native client would.
+
+## Notes
 
 [1] This is done so one end (A) can encrypt the message with the the other end's (B) public key, so only B can decrypt it with its private key. Is that how it works?
