@@ -1,4 +1,4 @@
-# bp protocol v0
+# bp Specification and Protocol - v0
 
 ## DISCLAIMER
 
@@ -45,6 +45,9 @@ now provides justification for why that is necessary. At least for this writer, 
 
 `$SERVER_TIMEOUT`: The time in milliseconds the client waits for the server to respond to a command with a "synchronous" character before falling back to an error state.
 
+`$CLIENT_TIMEOUT`: The time in milliseconds the server waits for the client to send a message with a "synchronous" character before falling back to an error state and possibly
+hitting the client with a strike towards banishment.
+
 `$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
 
 `$CLIENT_CONNECT_TIMEOUT`: The time in milliseconds the server waits for the client's hashed username.
@@ -59,30 +62,25 @@ now provides justification for why that is necessary. At least for this writer, 
 
 ### Client - sign up
 
-- TODO:
-    - spec Slowloris prevention;
-    - spec broadcast opt-in
-
 If the user does not yet have an account, he can sign up through the client.
 
 1. User chooses the option to sign up;
-2. Client connects to the server. See the command `connect` below for details;
-3. Client asks for username;
-4. Client sends command `signup-exists:$USERNAME` to the server;
+2. Client asks for username, passphrase and whether user wants to be broadcasted (default is false);
+3. Client encrypts the chosen username with the passphrase and the client's private key [ASSUMPTION];
+4. Client connects to the server. See the command `connect` below for details;
+    1. Server observes and acts on `$CLIENT_TIMEOUT`;
+5. Client sends command `signup:$USERNAME:$ENCRYPTED_USERNAME:$WANT_BROADCAST`;
     1. If the server takes longer than `$SERVER_TIMEOUT` to respond, the client warns the user. More work can be done around this [UX];
-5. Server sends message to the client to inform of the username existence, either `signup-exists:false` if no user is already using this username, or `signup-exists:true` otherwise;
-    1. If the username is already in use, the client lets the user know so they can pick another one;
-6. Client asks the user for a passphrase;
-7. Client encrypts the chosen username with the passphrase and the client's private key [ASSUMPTION] and sends command `signup:$USERNAME:$ENCRYPTED_USERNAME`;
-    1. Client observes and acts on `$SERVER_TIMEOUT`;
-    2. If at this moment the username was already chosen by another user, the server sends the message `signup-exists:true` and the client lets the user know;
+    2. If the username is already in use, server sends message to the client to inform of the username existence: `signup-conflict`. The client then informs the user and asks for
+    another username;
     3. [OPTION] This document from here on out is going to assume the strategy outlined above of never sending the user's password to the server. This is inspired by
     [Protected Text](https://www.protectedtext.com/). At first it seems a more secure strategy. However, I wouldn't rule out, for example, the possibility of sending the
-    private-key-encrypted passphrase to the server. In this latter case, the server (1) wouldn't have knowledge of the passphrase, (2) wouldn't necessarily (?) have
-    to store the encrypted passphrase [SECURITY].
-8. Server sends message `signup:ok` to let the client know the process succeeded. It stores the $USERNAME and $ENCRYPTED_USERNAME so the user can sign in;
-9. After signup [UX]:
-    1. [OPTION] The user does not get automatically logged in, and has to log in separately;
+    private-key-encrypted passphrase to the server. In this latter case, the server wouldn't have knowledge of the passphrase [SECURITY].
+6. Server sends message `signup-ok` to let the client know the process succeeded. It stores the $USERNAME and $ENCRYPTED_USERNAME so the user can sign in, as well as if the user
+wants to be broadcasted to other users;
+7. After signup [UX]:
+    1. [OPTION] The user does not get automatically logged in, and has to log in separately. If that's the case, either the client or the server would have to disconnect after
+    signup;
     2. [OPTION] The user gets automatically logged in;
 
 ### Client - login
