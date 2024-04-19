@@ -11,6 +11,9 @@ CA: Certificate authority. [ssl.com - What is a Certificate Authority (CA)?](htt
 
 MITM attack: Man-in-the-middle attack. [Imperva - Man in the middle (MITM) attack](https://www.imperva.com/learn/application-security/man-in-the-middle-attack-mitm/)
 
+Slowloris attack: A sort of network attack on systems with long lived connections where the attacker fills the server with connections that either do nothing or are very slow
+to act, in that way evetually exhausting the server connection capacity with useless connections. [Cloudflare - Slowloris DDoS attack](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/)
+
 ## E2E encryption
 
 `bp` will use E2E encryption. Here's a reference for that [Security Stack Exchange - What is end-to-end encryption and how to do it (correctly / securely)?](https://security.stackexchange.com/questions/230068/what-is-end-to-end-encryption-and-how-to-do-it-correctly-securely)
@@ -46,7 +49,7 @@ now provides justification for why that is necessary. At least for this writer, 
 `$SERVER_TIMEOUT`: The time in milliseconds the client waits for the server to respond to a command with a "synchronous" character before falling back to an error state.
 
 `$CLIENT_TIMEOUT`: The time in milliseconds the server waits for the client to send a message with a "synchronous" character before falling back to an error state and possibly
-hitting the client with a strike towards banishment.
+hitting the client with a strike towards banishment. The main motivation for this is Slowloris prevention.
 
 `$SERVER_CONNECT_TIMEOUT`: The time in milliseconds the client waits for the server's public key upon connection.
 
@@ -114,17 +117,6 @@ wants to be broadcasted to other users;
     1. [WHEN] User not registered:
         1. Client asks the user for a username and a password [WIP]
     2. [WHEN] User registered.
-
-**DEPRECATED**
-
-1. The client connects to the server using TLS;
-2. The server sends its public key [1] in the following format: `connect:$PUBLIC_KEY`;
-    1. If the server takes longer than `$SERVER_CONNECT_TIMEOUT` to send its public key, the client automatically closes the connection and notifies the user;
-3. The client asks the user for a username, encrytps it with the server's public key and sends a message in the following format: `connect:$PUBLIC_KEY:$USERNAME_HASH` [1];
-    1. If the client takes longer than `$CLIENT_CONNECT_TIMEOUT` to send its public key and hashed username, the server automatically disconnects the client. This is done to
-    prevent a [Slowloris attack](https://www.cloudflare.com/learning/ddos/ddos-attack-tools/slowloris/);
-    2. Each time the client times out, the server gives the client's IP a strike. After `$CLIENT_CONNECT_TIMEOUT_LIMIT` many strikes, the client is banned;
-
 
 ### Server - broadcast users
 
