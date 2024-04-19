@@ -85,15 +85,22 @@ wants to be broadcasted to other users;
 
 ### Client - login
 
-TODO: spec Slowloris prevention
-
 1. User chooses the option to login;
-2. Client connects to the server. See the command `connect` below for details;
-3. User provides username and passphrase;
-4. Client encrypts provided username with user's passphrase and private key [ASSUMPTION] and sends the command `login:$USERNAME:$ENCRYPTED_USERNAME` to the server;
+2. User provides username and passphrase;
+3. Client encrypts provided username with user's passphrase and private key [ASSUMPTION];
+4. Client connects to the server. See the command `connect` below for details;
+    1. Server observes and acts on `$CLIENT_TIMEOUT`;
+5. Client sends the command `login:$USERNAME:$ENCRYPTED_USERNAME` to the server;
     1. Client observes and acts on `$SERVER_TIMEOUT`;
     2. If credentials don't match, server sends message `login:invalid` to the client, and it lets the user know;
-5. Server sends the message `login:ok` to let the client know the login succeeded;
+6. Server sends the message `login:ok` to let the client know the login succeeded;
+
+[IDEAS]
+    - Connection is kept alive so it isn't strictly required for the server to send some sort of authn token to the client upon login. However, this could improve UX. For example,
+    if the client does not have a token and briefly loses connection, upon reconnection the user would have to login again. The user could choose what he prefers. If they choose
+    to not have to login upon reconnection, the server could send a token upon login. Would it be possible to forge the token in such a way that only that specific client could
+    use it? For example, the server encrypts a part of the token with the client public key in such a way that only the client's private key can decrypt it, and when the client
+    sends back the token it has to decrypt, in that way proving that it's the intended client [ASSUMPTION]. Or could some sort of signing be used?
 
 ### Client - connect
 
