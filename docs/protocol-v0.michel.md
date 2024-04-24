@@ -119,18 +119,40 @@ wants to be broadcasted to other users;
     2. One way or another, the user or the client itself may refuse to connect;
 2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate and vice-versa;
 
-### Server - broadcast users
+### Client - ask for user broadcast
 
-- [IDEAS]
-    - On signup user has to opt-in to be broadcasted, default is not to broadcast;
+- What is the purpose of user broadcasting?
+    - This is meant to serve as "bootstraping" for the platform. In other words, it's a way `bp` users can connect to each other without relying on any 3rd party. As a thought
+    experiment, how would the users be able to message each other in `bp` if it was the only means of remote communication in the world without broadcasting? Of course, broadcasting
+    only the username possibly won't help people identify their friends and such. We can let the users optionally provide more information about themselves so they can be found
+    more easily.
+
+The broadcast user list is paginated.
+
+**Pre-conditions**:
+
+- User has to be logged in.
+
+1. Client sends message `user-broadcast` to the server;
+    1. Client observes and acts upon `$SERVER_TIMEOUT`;
+    2. Server assumes client is asking for the first page of users with this specific message;
+2. Server sends message `user-broadcast:$USERS:$PREVIOUS_PAGE_KEY:$NEXT_PAGE_KEY` to the client;
+    1. `$USERS` is a list of usernames, those from the users who opted-in to be broadcasted. The usernames are separated by the newline character: `\n`;
+        1. [OPTION] In addition to the username, the server may also provide a flag that indicates whether the user is currently online. Also, the list may be ordered by
+        (1) online first, (2) alphabetically;
+    2. `$PREVIOUS_PAGE_KEY` is the key the client should use if the user wants to fetch the previous page of broadcasted users. This may be empty, which implies there's no previous
+    page, i.e., the user is on the first page;
+    3. `$NEXT_PAGE_KEY` is the key the client should use if the user wants to fetch the next page of broadcasted users. This may be empty, which implies there's no next page, i.e.,
+    the user is already on the last page;
+    4. This message assumes the server uses "keyset pagination". More details on [Use the index, Luke! - We need tool support for keyset pagination](https://use-the-index-luke.com/no-offset);
+3. Client shows the list to the user;
+4. If the user wants to change the page on the list, the client sends the message `user-broadcast:$PAGE_KEY`;
+    1. `$PAGE_KEY` is the key of either the previous or the next page the server sent along with the last request for a user broadcast page;
+    2. From here on out, the process is the same as described above.
 
 ### Client - cancel broadcast
 
 User can opt-out of being broadcasted at any time. The effect will not necessarily be immediate, though. [TODO]
-
-### Client - page broadcasted users
-
-The broadcast user list is paginated. [TODO]
 
 ### Client - search broadcasted user
 
@@ -161,9 +183,9 @@ Once a request has been denied it is stored. The authorizer has access to the de
 
 ### Client - authorize
 
-### Client - send
+### Client - send message
 
-### Server - send
+### Server - send message
 
 ### Client - banishment
 
