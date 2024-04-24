@@ -95,10 +95,10 @@ wants to be broadcasted to other users;
     1. Server observes and acts on `$CLIENT_TIMEOUT`;
 5. Client sends the command `login:$USERNAME:$ENCRYPTED_USERNAME` to the server;
     1. Client observes and acts on `$SERVER_TIMEOUT`;
-    2. If credentials don't match, server sends message `login:invalid` to the client, and it lets the user know;
+    2. If credentials don't match, server sends message `login:invalid` to the client and closes the connection, the clients lets the user know;
 6. Server sends the message `login:ok` to let the client know the login succeeded;
 
-[IDEAS]
+- [IDEAS]
     - Connection is kept alive so it isn't strictly required for the server to send some sort of authn token to the client upon login. However, this could improve UX. For example,
     if the client does not have a token and briefly loses connection, upon reconnection the user would have to login again. The user could choose what he prefers. If they choose
     to not have to login upon reconnection, the server could send a token upon login. Would it be possible to forge the token in such a way that only that specific client could
@@ -111,12 +111,13 @@ wants to be broadcasted to other users;
     1. [OPTION] Upon handshake, the client shows the server's certificate information to the user, especially information about the server _and_ the CA;
         1. [ALTERNATIVE] The client can have hardcoded expectations about the server's certificate information, and when those expectations fail, the client refuses to connect.
         If the client has been tampered with this won't work, but if that's the case all bets are off anyway;
+        2. The client may cache the user acceptance of the server certificate info for a determinate amount of time. This may be useful in some situations. For example, when the
+        user tries to login the client will connect to the server and show the certificate info. If the user provides the wrong passphrase by mistake, the server will one way or
+        another close the connection for Slowloris prevention. When the user tries again, the client will have to connect again. It may be an UX problem if the client shows the
+        certificate info again and asks for the user acceptance. If the info is the same as it is in the cache, the client may implicitly accept the certificate without asking
+        again. This may be configurable.
     2. One way or another, the user or the client itself may refuse to connect;
-2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate;
-3. Upon client connection:
-    1. [WHEN] User not registered:
-        1. Client asks the user for a username and a password [WIP]
-    2. [WHEN] User registered.
+2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate and vice-versa;
 
 ### Server - broadcast users
 
