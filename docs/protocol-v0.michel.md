@@ -119,7 +119,16 @@ wants to be broadcasted to other users;
     2. One way or another, the user or the client itself may refuse to connect;
 2. [ASSUMPTION] When the client connects it already has the server's public key contained in the server's certificate and vice-versa;
 
-### Client - ask for user broadcast
+### Client - request user data
+
+When the user signs in they may want to see their data (for now, only whether they are being broadcasted) and act upon it. This spec for now you only focuses on the user requesting
+their own data, but this could be easily extended to support Alice requesting Bob's data, provided Bob has authorized Alice to communicate.
+
+1. Client sends message `user-data` to the server;
+    1. Client observes and acts upon `$SERVER_TIMEOUT`;
+2. Server sends message `user-data:$USERNAME:$IS_BROADCASTED`.
+
+### Client - request user broadcast
 
 - What is the purpose of user broadcasting?
     - This is meant to serve as "bootstraping" for the platform. In other words, it's a way `bp` users can connect to each other without relying on any 3rd party. As a thought
