@@ -154,6 +154,12 @@ The broadcast user list is paginated.
 
 User can opt-out of being broadcasted at any time. The effect will not necessarily be immediate, though. [TODO]
 
+1. User chooses the option to cancel his broadcasting;
+2. Client sends the message `cancel-broadcast` to the server;
+    1. Client observes and acts upon `$SERVER_TIMEOUT`;
+3. Server sends message `cancel-broadcast:ok`;
+4. Client lets the user know the operation succeeded.
+
 ### Client - search broadcasted user
 
 Client can search for a user among the broadcasted ones. [TODO]
