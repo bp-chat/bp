@@ -152,8 +152,6 @@ The broadcast user list is paginated.
 
 ### Client - cancel broadcast
 
-User can opt-out of being broadcasted at any time. The effect will not necessarily be immediate, though. [TODO]
-
 1. User chooses the option to cancel his broadcasting;
 2. Client sends the message `cancel-broadcast` to the server;
     1. Client observes and acts upon `$SERVER_TIMEOUT`;
