@@ -63,6 +63,11 @@ hitting the client with a strike towards banishment. The main motivation for thi
 
 - [ASSUMPTION] The client will start up offline, will only attempt to connect when the user either tries to sign up or log in.
 
+- [TODO]
+    - It may make sense to version the messages;
+    - It may make sense to add an id to the messages so that client and server can correlate them in cases where one (generally the client) sends a message and expects a
+    direct and "immediate" response in return.
+
 ### Client - sign up
 
 If the user does not yet have an account, he can sign up through the client.
@@ -169,7 +174,13 @@ The broadcast user list is paginated.
 
 ### Client - search broadcasted user
 
-Client can search for a user among the broadcasted ones. [TODO]
+Client can do a text-based search for a user among the broadcasted ones.
+
+1. Client sends message `search-user:$SEARCH_TERM`;
+    1. Client observes and acts upon `$SERVER_TIMEOUT`;
+2. Server performs a full-text search among the broadcasted users;
+    1. Initially only the username will be taken into account in the search, but this could be expanded later;
+3. Refer to the `request user broadcast` command above for how the server responds and how the client can interact with the response.
 
 ### Client - request authorization
 
