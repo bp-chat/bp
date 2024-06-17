@@ -4,10 +4,18 @@ Lightweight server and client.
 
 ## TODOs
 * V0 protocolo
-* Criar server (hello world)
-* Criar client (hello world)
+* ~criar server (hello world)~
+* ~Criar client (hello world)~
+* Utilizar uma versão asyncrona do socket
+* Adicionar E2EE na mensagem
+* Registro + autenticacao?
 * Criar interface da tui
+* Adicionar suporte a grupo
 * Implementar connect(?) do protocolo
+* Impor TTL da conexão
+* Adicionar permissão de envio de mensagem
+* Criar canais
+* Mensagem por canal
 
 ## mvp 
 * e2e encryption
