@@ -8,12 +8,14 @@ Lightweight server and client.
 * ~Criar client (hello world)~
 * Utilizar uma versão asyncrona do socket
 * Adicionar E2EE na mensagem
+* Implementar connect(?) do protocolo
 * Registro + autenticacao?
 * Criar interface da tui
-* Adicionar suporte a grupo
-* Implementar connect(?) do protocolo
+* Adicionar permissão de envio de mensagem (solicitar, rejeitar, aceitar)
+* Adicionar envio de DM
 * Impor TTL da conexão
-* Adicionar permissão de envio de mensagem
+* Adicionar suporte a grupo
+    * Acho que no documento de especificação vale a pena definir o que é grupo e o que é canal antes dessa implementação
 * Criar canais
 * Mensagem por canal
 
