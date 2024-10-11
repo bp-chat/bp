@@ -14,10 +14,10 @@
 	    - https://github.com/ziglang/zig/issues/14171
 	    - https://github.com/ziglang/zig/pull/19308
 	    - https://github.com/mattnite/zig-mbedtls
-		- https://github.com/Mbed-TLS/mbedtls
+			- https://github.com/Mbed-TLS/mbedtls
 	    - https://harshityadav95.medium.com/tls-termination-proxy-3733b69680cb
 	    - https://tls13.xargs.org/
 	    - https://docs.kernel.org/networking/tls-offload.html
-		- https://www.kernel.org/doc/html/latest/networking/tls.html
+			- https://www.kernel.org/doc/html/latest/networking/tls.html
 	    - https://github.com/fantix/kloop
 - research: how to implement a secure TCP connection in Zig
