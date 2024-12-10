@@ -20,4 +20,5 @@
 	    - https://docs.kernel.org/networking/tls-offload.html
 			- https://www.kernel.org/doc/html/latest/networking/tls.html
 	    - https://github.com/fantix/kloop
+		- https://github.com/crazyguitar/ktls-example (contains other links)
 - research: how to implement a secure TCP connection in Zig
