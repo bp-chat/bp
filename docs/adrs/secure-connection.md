@@ -21,4 +21,13 @@
 			- https://www.kernel.org/doc/html/latest/networking/tls.html
 	    - https://github.com/fantix/kloop
 		- https://github.com/crazyguitar/ktls-example (contains other links)
+			- https://words.filippo.io/playing-with-kernel-tls-in-linux-4-13-and-go/
+	- notes: https://words.filippo.io/playing-with-kernel-tls-in-linux-4-13-and-go/
+		- claims about ktls:
+			- only supports TLS 1.2
+			- only supports encrypting packets, there's a number of things it defers to userspace applications: "Handshake, key exchange, certificate handling, alerts and
+			renegotiation are left out of kernelspace"
+			- only supports encryption, not decryption
+			- "These limitations are very good to contain complexity and attack surface, but they mean that kTLS won't replace any userspace complexity as you still need a TLS
+			library to do the handshake, for all other cipher suites, and for the receiving side of the connection. That makes kTLS purely a performance feature."
 - research: how to implement a secure TCP connection in Zig
