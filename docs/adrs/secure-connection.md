@@ -8,7 +8,7 @@
 	    - https://security.stackexchange.com/questions/241493/is-there-any-solution-beside-tls-for-data-in-transit-protection
 	    - https://softwareengineering.stackexchange.com/questions/271366/tls-alternatives-that-do-not-require-a-central-authority
 - research: what Zig supports to secure a TCP connection
-	- current search: https://search.brave.com/search?q=%22io_uring%22+%22tls%22&source=web
+	- current search: https://search.brave.com/search?q=tls+termination+proxy
 	- links:
 	    - https://ziglang.org/documentation/master/std/#std.crypto.tls
 	    - https://github.com/ziglang/zig/issues/14171
