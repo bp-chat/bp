@@ -8,7 +8,7 @@
 	    - https://security.stackexchange.com/questions/241493/is-there-any-solution-beside-tls-for-data-in-transit-protection
 	    - https://softwareengineering.stackexchange.com/questions/271366/tls-alternatives-that-do-not-require-a-central-authority
 - research: what Zig supports to secure a TCP connection
-	- current search: https://search.brave.com/search?q=tls+termination+proxy
+	- current search: https://search.brave.com/search?q=reverse+proxy+list
 	- links:
 	    - https://ziglang.org/documentation/master/std/#std.crypto.tls
 	    - https://github.com/ziglang/zig/issues/14171
@@ -30,4 +30,11 @@
 			- only supports encryption, not decryption
 			- "These limitations are very good to contain complexity and attack surface, but they mean that kTLS won't replace any userspace complexity as you still need a TLS
 			library to do the handshake, for all other cipher suites, and for the receiving side of the connection. That makes kTLS purely a performance feature."
+	- tls termination proxy
+		- options:
+			- https://nginx.org/
+			- https://www.envoyproxy.io/
+			- https://hitch-tls.org/
+		- links:
+			- https://github.com/dariubs/awesome-proxy
 - research: how to implement a secure TCP connection in Zig
